@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelime Gezmece</title>
+<style>
+  /* Arka plana JPG resmi ekliyoruz */
+body {
+    font-family: Roboto, sans-serif;
+    background: url('https://64.media.tumblr.com/2f091e00078d52934ca7e568afb4256e/tumblr_nzlmofEper1r99baho1_540.gif') no-repeat center center fixed;
+    background-size: cover; /* Resmi tam ekrana yayıyoruz */
+    display: flex;
+    font-size: #0f0;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    color: #e0e0e0;
+}
+
+h1, h2, h3, h4, h5 {
+    color: #e0e0e0;
+    letter-spacing: 0.9px;
+    margin: 5px 0;
+}
+
+.game-container {
+    text-align: center;
+    background: none; /* Şeffaf yapı */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: none; /* Gölge kaldırıldı */
+    width: 100%;
+    max-width: 1080px;
+    position: relative;
+}
+
+/* Hikaye kısmı */
+.story {
+    margin: 5px 0;
+    background: none;
+    font-size: 20px;
+    color: #fff;
+    font-weight: 1000;
+}
+
+/* Word grid düzeni */
+.word-grid {
+    display: flex; /* Flexbox ile yatay hizalama */
+    justify-content: center; /* Elemanları yatayda ortalar */
+    gap: 10px; /* Harfler arasına boşluk ekler */
+    position: relative;
+    z-index: 2; /* Diğer öğelerin üzerinde görünür */
+}
+
+.word-grid div {
+    background: none; /* Kutular şeffaf */
+    height: 80px;
+    width: 80px;
+    border-radius: 50px;
+    line-height: 75px;
+    color: rgba(255, 0, 0, 1); /* Yazılar beyaz, çünkü JPG üzerinde kontrast gerekiyor */
+    font-weight: 1000;
+    background: rgba(255, 255, 255, 1);
+    font-size: 35px;
+    text-align: center;
+}
+
+/* Harflerin çemberi */
+.letter-circle {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 30px auto;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 1); /* Hafif şeffaf arka plan */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1; /* Harflerin üzerine çıkmaması için */
+}
+
+/* Harfler */
+.letter {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    font-size: 30px;
+    color: #0f0f0f; /* Harf rengi siyah */
+    user-select: none;
+    cursor: pointer;
+    border-radius: 50%;
+    font-weight: bold;
+    transform: scale(1.3);
+    text-align: center;
+    line-height: 50px; /* Harfleri ortalamak için */
+    transition: transform 0.3s ease-in-out;
+}
+
+.letter.selected {
+    background: #0f0; /* Seçildiğinde arka plan yeşil */
+    box-shadow: 0 0 15px 10px rgba(0, 0, 0, 0.5); /* Siyah gölge ekler */
+}
+
+/* Bildirim için genel stil */
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 25px;
+    background-color: #4CAF50;  /* Varsayılan yeşil renk (başarı için) */
+    color: white;
+    font-size: 16px;
+    border-radius: 8px;  /* Yuvarlatılmış köşeler */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    z-index: 10000;  /* Bildirimin z-index'i yüksek tutuldu */
+    transition: opacity 0.5s ease-out, top 0.3s ease-in;
+    display: none;
+    max-width: 400px;
+    width: 90%;
+    text-align: left;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+/* Bildirim türlerine göre renkler */
+.notification.success {
+    background-color: #0ff000;
+}
+
+.notification.error {
+    background-color: #ff0000;
+}
+
+.notification.warning {
+    background-color: #ff9800;
+}
+
+.notification.info {
+    background-color: #2196F3;
+}
+
+/* Bildirim içeriği */
+.notification-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* İkonlar */
+.notification-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 15px;
+    font-size: 20px;
+    display: inline-block;
+}
+
+/* Kapatma butonu */
+.close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: color 0.3s;
+}
+
+.close-btn:hover {
+    color: #ddd;
+}
+
+/* Bildirim göründüğünde */
+.notification.show {
+    opacity: 1;
+    top: 20px;
+}
+
+/* Responsive stil */
+@media (max-width: 1080px) {
+    h1 {
+        font-size: 1em;
+    }
+
+    .controls .button {
+        background: #fff; /* Butonlar şeffaf */
+        color: #000; /* Yazı rengi beyaz */
+        border: 3px solid #0f0f0f; /* Kenarlık beyaz */
+        padding: 10px 30px;
+        font-size: 20px;
+        border-radius: 25px;
+        cursor: pointer;
+    }
+
+    .controls .button:hover {
+        background: rgba(255, 255, 255, 0.90); /* Hover sırasında hafif şeffaf */
+    }
+
+    .modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: none; /* Modal tamamen şeffaf */
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: none;
+        display: none;
+        text-align: center;
+    }
+
+    .modal.active {
+        display: block;
+    }
+
+    .modal h2, .modal p {
+        color: #0f0; /* Yazılar beyaz */
+    }
+
+    .modal button {
+        background: none; /* Butonlar şeffaf */
+        color: #0f0; /* Yazı rengi beyaz */
+        border: 1px solid #0f0; /* Kenarlık beyaz */
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+}
+
+/* Bildirim için animasyon */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        top: 0;
+    }
+    to {
+        opacity: 3;
+        top: 50px;
+    }
+}
+</style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Kelime Gezmece</h1>
+        <div class="story"></div>
+        <div class="word-grid"></div>
+        <div class="letter-circle"></div>
+        <div class="controls">
+            <button id="shuffle-btn" class="button">Harfleri Karıştır</button>
+            <button id="hint-btn" class="button hint-button">İpucu</button>
+        </div>
+    </div>
+    <div class="modal" id="end-modal">
+        <h2>Oyun Bitti!</h2>
+        <p>Tebrikler! Tüm seviyeleri tamamladınız.</p>
+        <button id="restart-btn">Tekrar Oyna</button>
+    </div>
+    <!-- Modern Bildirim Div'i -->
+<div id="notification" class="notification" style="display: none;">
+  <div class="notification-content">
+    <span id="notification-icon" class="notification-icon"></span>
+    <span id="notification-message"></span>
+    <button id="close-notification" class="close-btn">&times;</button>
+  </div>
+</div>
+    <script>
+        const levels = [
+            { id: 9, words: ["ELMA", "ARMUT", "BÖREK", "KÖR", "ERK", "ÖBEK", "BEK", "BRE", "BER"], goal: 9, story: "Alıştırmaya Hoşgeldin. Bakalım becerebilecek misin?" },
+            { id: 18, words: ["BAL", "BALA", "LAB", "ALABALIK", "KABALIK", "BALIK", "KABALIKLI", "KALABALIK", "BALK", "KABAK", "BALKAN", "BALIKÇI", "KABAKÇI", "BALKON", "BALKAY", "BALAŞ", "BALIKHANE", "ALIK", "KABİL"], goal: 18, story: "Balıkçı kasabasına vardın. Balıkları yakalamak için bu kelimeleri çözmelisin!" },
+            { id: 19, words: ["ÇİÇEK", "EK", "ÇEKİÇ", "ÇİÇEKÇİ", "ÇEK", "EKİCİ", "ÇİÇEKLİ", "EKMEK", "EKİM", "ÇEKİL", "ÇEKMEK", "EKME", "ÇİÇEĞİM", "ÇİÇEKLİK", "EKİNLİK", "ÇEKİM", "EKİNLER", "ÇİÇEKÇİLİK", "ÇEKİÇLİ"], goal: 19, story: "Çiçek bahçesindesin. Çiçeklerin arasından doğru kelimeleri seçerek çıkış yolunu bul!" },
+            { id: 20, words: ["ORMAN", "ORMANCI", "CAN", "ROMAN", "RAM", "NAR", "ORMANLAR", "ORMANDA", "ORMANCILIK", "ROMANCI", "ORMANCIKLAR", "ORMANLIK", "CANLI", "NORM", "ORMANCILAR", "ORMANCILIKTA", "ORMANDAKİ", "CANI", "RAMAK", "ORMANSEVER"], goal: 20, story: "Karanlık bir ormandasın! Çıkış yolunu bulmak için doğru kelimeleri çözmelisin!" },
+            { id: 13, words: ["KİRAZ", "FEZA", "NOKTA", "PİYANO", "PİYON", "PANO", "PİN", "İYON", "ONAY", "AYİN", "OYA", "ANİ", "PAY"], goal: 13, story: "Mağarayı geçmek için kelimeleri çözmelisin." },
+            { id: 21, words: ["TAHTA", "TAHTALI", "ALTI", "HALT", "HAT", "TAHTACILAR", "TAHTACILIK", "TAHTALIK", "ALTIN", "TAHTALIĞI", "TAHTALIKLAR", "TAHTAÇALI", "TAHTADAN", "HATLAR", "TAHTALIĞA", "HATLILAR", "TAHTALAR", "HATLILIK", "TAHTAÇILIK", "TAHTTAN"], goal: 21, story: "Tahta köprüyü geçmek için ipuçlarını çöz ve kelimeleri tamamla!" },
+            { id: 22, words: ["DENİZ", "DENİZCİ", "ZİL", "NİZAM", "DENİZCİLİK", "DENİZALTI", "DENİZLER", "DENİZALTICI", "DENİZALTILAR", "DENİZLERDE", "CİZYE", "CİZ", "ZİNCİR", "DELİK", "DENİZKIZI", "DENİZLİ", "DENİZCİLER", "ZİNCİRLİK", "ZİLTAKIMI", "DENİZLERE", "ZİNCİRLER", "ZİNCİRLİ"], goal: 22, story: "Deniz altındaki batık gemiyi bulmak için doğru kelimeleri çözmelisin!"},
+            { id: 16, words: ["İLAH", "AHİT", "İHLAL", "TAHLİL", "TALİH", "HİLAL", "İLLA", "İLAHİ", "İTHAL", "HALT", "TALİHLİ", "LAHİT", "MÜTEAHHİT", "İNKILAP", "İHTİLAL", "TALİ"], goal: 16, story: "Bir zamanlar senin olan ama şimdi kaybolmuş anıların izinden git!" },
+            { id: 23, words: ["ETİK", "KÜLTÜR", "BİLİM", "FELSEFE", "EĞİTİM", "BİRİKİM", "BİLİRKİŞİ", "KÜLTÜREL", "YAPIT", "DİLKURUMU", "FELSEFİ", "ÖĞRETİ", "SİSTEM", "LİTERATÜR", "SÖZLÜK", "KÜLTÜRLER", "SÖYLEM", "EĞİTİMCİ", "BİLGİ", "KAVRAM", "BİRLEŞİM", "SÖZCÜK"], goal: 23, story: "Dil kurumu ve kültürler arası etkileşimi çözerek, bilgi birikimini ortaya çıkar!" },
+            { id: 24, words: ["ANTROPOLOJİ", "BİLİMKURAM", "SOSYOLOJİ", "MİTOLOJİ", "DİLİM", "KÜLTÜR", "SÖZLÜK", "KAVRAMSAL", "ETİKET", "TEORİ", "DİLKURUMU", "FELSEFECİ", "KAVRAMCI", "YAZIN", "BİRLEŞİM", "KAVRAMCILIK", "SÖYLEM", "BİLİRKİŞİ", "ZİHİNSEL", "KÜLTÜRLÜ", "TOPLUMSAL", "DİLİK", "SÖZCÜKÇÜ"], goal: 24, story: "Toplumların kültürlerini anlamak ve dil kurumunun derinliklerine inmek için doğru kelimeleri çözmelisin!" },
+            { id: 25, words: ["EPİSTEMOLOJİ", "ONTOLOJİ", "KAVRAMSAL", "ANALİZ", "SENTEZ", "FELSEFİ", "DİLİM", "BİRLEŞİM", "BİLİMSEL", "KÜLTÜREL", "DİL", "SÖZCÜKÇÜ", "BİLİRKİŞİ", "KAVRAM", "DÜŞÜNCE", "EĞİTİM", "FELSEFE", "BİLİM", "TARTIŞMA", "EĞİTİMCİ", "SİSTEM", "YAZIN", "KAVRAMCILIK", "HİPOTEZ", "MÜZİKAL", "TANIM"], goal: 25, story: "Epistemolojik soruları ve ontolojik kavramları çözerek bilinçli bir düşünceye ulaş!" },
+            { id: 26, words: ["SEMİYOLOJİ", "SÖYLEM", "ANLAM", "SEMANTİK", "BİRLEŞİM", "DEĞER", "İŞLEV", "KAVRAM", "KÜLTÜREL", "KAVRAMCI", "BİLİRKİŞİ", "LİTERATÜR", "TARTIŞMA", "FELSEFİ", "TOPLUMSAL", "EĞİTİM", "KAVRAMSAL", "YAZIN", "BİLGİ", "FELSEFE", "ZİHİNSEL", "SÖZCÜK", "TEORİ", "KAVRAM", "DİLİM", "KAVRAMCILIK"], goal: 26, story: "Dilsel yapıları ve sembolizmi çözmek için felsefi bir bakış açısıyla dilin derinliklerine dal!" },
+            { id: 27, words: ["MÜNFERİT", "ONTOLOJİ", "İZLENİM", "BİLİMSEL", "KAVRAM", "DÜŞÜNME", "SİSTEM", "EĞİTİMCİ", "FELSEFİ", "BİLGİ", "ANTROPOLOJİ", "BİRLEŞİM", "KÜLTÜRLER", "FELSEFECİ", "BİLİRKİŞİ", "KAVRAMCI", "KÜLTÜR", "DİLİM", "YAZIN", "HİPOTEZ", "DİLİNSEL", "TARTIŞMA", "SÖYLEM", "YAZINSAL", "SÖZCÜKÇÜ", "DİL", "BİRLEŞİM"], goal: 27, story: "Bilinçli düşünceyi ve kelimeleri harmanlayarak, dilin ve kültürün derinliklerine in!" },
+            { id: 17, words: ["KAVRAMA", "KAVRAM", "VARMAK", "ARAMAK", "KAMARA", "KAVRAMA", "MAKARA", "AVARA", "VAKAR", "VARAK", "ARAMA", "KARMA", "RAKAM", "RAMAK", "MARKA", "VAKA", "AVAM"], goal: 17, story: "Şimdi, kaybolan zamanı geri getirmek ve geçmişin izini bulmak için bir yolculuğa çıkma zamanı!" },
+        ];
+        let currentLevelIndex = 0;
+        let currentWordIndex = 0;
+        let foundWords = 0;
+        let userSelection = "";
+        let selectedLetters = [];
+        let isDragging = false;
+
+// DOM elementlerini seçme
+const wordGrid = document.querySelector(".word-grid");
+const letterCircle = document.querySelector(".letter-circle");
+const storyDiv = document.querySelector(".story");
+const shuffleBtn = document.getElementById("shuffle-btn");
+const hintBtn = document.getElementById("hint-btn");
+const endModal = document.getElementById("end-modal");
+const restartBtn = document.getElementById("restart-btn");  // Tekrar tanımlama hatası giderildi
+
+// Seviyelere özel arka plan GIF'lerini tanımlıyoruz
+const levelBackgrounds = [
+  'https://64.media.tumblr.com/2f091e00078d52934ca7e568afb4256e/tumblr_nzlmofEper1r99baho1_540.gif', // Seviye 1
+  'https://cdn.pixabay.com/photo/2024/04/06/17/40/ai-generated-8679713_1280.jpg', // Seviye 2
+  'https://phoneky.co.uk/thumbs/screensavers/down/nature/sunsetbyto_0ADInuNX.gif',  // Seviye 3
+  // Daha fazla seviye için GIF ekleyebilirsiniz
+];
+
+// Arka planı güncelleyen fonksiyon
+function updateBackgroundForLevel(levelIndex) {
+  if (levelIndex >= 0 && levelIndex < levelBackgrounds.length) {
+    document.body.style.backgroundImage = `url(${levelBackgrounds[levelIndex]})`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
+  }
+}
+
+// Seviye yüklendiğinde çalışacak fonksiyon
+function loadLevel(levelIndex) {
+  const level = levels[levelIndex];
+  currentWordIndex = 0;
+  foundWords = 0;
+  storyDiv.textContent = level.story;
+  createWordGrid(level.words[currentWordIndex]);
+  createLetterCircle(level.words[currentWordIndex]);
+
+  // Arka planı seviyeye göre güncelle
+  updateBackgroundForLevel(levelIndex);
+}
+
+// Kelime ızgarasını oluştur
+function createWordGrid(word) {
+  wordGrid.innerHTML = "";  // Önceki kelimeyi temizle
+  for (let i = 0; i < word.length; i++) {
+    const box = document.createElement("div");
+    wordGrid.appendChild(box);
+  }
+}
+
+// Harf çemberini oluştur
+function createLetterCircle(word) {
+  letterCircle.innerHTML = "";  // Eski harfleri temizle
+  const shuffledLetters = shuffleArray(word.split(""));  // Kelimenin harflerini karıştır
+  const angleStep = (2 * Math.PI) / shuffledLetters.length;  // Her harf arasındaki açıyı hesapla
+  const shiftX = 400;  // X kaydırma miktarı (gerekirse ayarlanabilir)
+
+  shuffledLetters.forEach((letter, index) => {
+    const angle = angleStep * index;
+    const x = 128 + 100 * Math.cos(angle);  // X koordinatını hesapla
+    const y = 129 + 100 * Math.sin(angle);  // Y koordinatını hesapla
+    const letterElem = document.createElement("div");
+    letterElem.className = "letter";
+    letterElem.textContent = letter;
+
+    // Pozisyonu ayarla
+    letterElem.style.left = `${x}px`;
+    letterElem.style.top = `${y}px`;
+    letterCircle.appendChild(letterElem);
+  });
+
+  enableDragging();  // Harflerin sürüklenmesini sağla
+}
+
+// Harflerin sürüklenmesini etkinleştir
+function enableDragging() {
+  const letters = document.querySelectorAll(".letter");
+
+  letters.forEach((letter) => {
+    letter.addEventListener("mousedown", () => startDragging(letter));
+    letter.addEventListener("mouseenter", () => dragOver(letter));
+    letter.addEventListener("mouseup", stopDragging);
+    
+    letter.addEventListener("touchstart", (e) => startDragging(letter, e));
+    letter.addEventListener("touchmove", (e) => touchDragOver(e));
+    letter.addEventListener("touchend", stopDragging);
+  });
+
+  document.addEventListener("mouseup", stopDragging);
+  document.addEventListener("touchend", stopDragging);
+}
+
+// Harf sürüklemeye başla
+function startDragging(letterElem, event = null) {
+  isDragging = true;
+  if (!selectedLetters.includes(letterElem)) {
+    addLetterToSelection(letterElem);
+  }
+
+  if (event) event.preventDefault();
+}
+
+// Harfe sürükleniyor
+function dragOver(letterElem) {
+  if (isDragging && !selectedLetters.includes(letterElem)) {
+    addLetterToSelection(letterElem);
+  }
+}
+
+// Mobilde sürükleme
+function touchDragOver(event) {
+  if (!isDragging) return;
+  const touch = event.touches[0];
+  const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+  if (element && element.classList.contains("letter") && !selectedLetters.includes(element)) {
+    addLetterToSelection(element);
+  }
+}
+
+// Sürükleme durdurulduğunda
+function stopDragging() {
+  isDragging = false;
+  checkWordCompletion();
+}
+
+// Harf seçimi ekle
+function addLetterToSelection(letterElem) {
+  userSelection += letterElem.textContent;
+  selectedLetters.push(letterElem);
+  letterElem.classList.add("selected");
+  updateWordGrid(userSelection);
+}
+
+// Word grid'ini güncelle
+function updateWordGrid(selection) {
+  const boxes = wordGrid.querySelectorAll("div");
+  boxes.forEach((box, index) => {
+    box.textContent = selection[index] || "";
+  });
+}
+
+// Kelimenin tamamlanıp tamamlanmadığını kontrol et
+function checkWordCompletion() {
+  const currentLevel = levels[currentLevelIndex];
+  const currentWord = currentLevel.words[currentWordIndex];
+
+  if (userSelection === currentWord) {
+    foundWords++;  // Doğru kelime bulundu
+    currentWordIndex++;  // Bir sonraki kelimeye geç
+
+    // Eğer tüm hedef kelimeler bulunduysa, bir sonraki seviyeye geç
+    if (foundWords >= currentLevel.goal) {
+      currentLevelIndex++;
+      if (currentLevelIndex < levels.length) {
+        loadLevel(currentLevelIndex);
+      } else {
+        showEndModal();  // Oyun bitişi
+      }
+    } else {
+      // Hedef kelimeler tamamlanmadıysa, yeni kelimeyi oluştur
+      createWordGrid(currentLevel.words[currentWordIndex]);
+      createLetterCircle(currentLevel.words[currentWordIndex]);
+    }
+
+    // Doğru kelime için bildirim göster
+    showNotification("Tebrikler! Kelime doğru.", "success");
+  } else if (userSelection.length >= currentWord.length) {
+    // Yanlış kelime için bildirim göster
+    showNotification("Yanlış kelime! Tekrar deneyin.", "error");
+  }
+
+  // Seçimi sıfırlama
+  resetSelection();
+}
+
+// Seçimi sıfırla
+function resetSelection() {
+  userSelection = "";
+  selectedLetters.forEach((elem) => elem.classList.remove("selected"));
+  selectedLetters = [];
+  updateWordGrid(userSelection);
+}
+
+// Dizi karıştırma fonksiyonu
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// Oyun bittiğinde modal göster
+function showEndModal() {
+  endModal.classList.add("active");
+}
+
+// Bildirim gösterme
+function showNotification(message, type) {
+  const notification = document.createElement("div");
+  notification.classList.add("notification", type, "show");
+  notification.innerHTML = `
+    <span class="notification-message">${message}</span>
+    <button class="close-btn">&times;</button>
+  `;
+  document.body.appendChild(notification);
+
+  const closeBtn = notification.querySelector(".close-btn");
+  closeBtn.addEventListener("click", () => {
+    notification.classList.remove("show");
+    setTimeout(() => notification.remove(), 300);
+  });
+
+  setTimeout(() => {
+    notification.classList.remove("show");
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+// Düğmelere event listener ekle
+shuffleBtn.addEventListener("click", () => {
+  const currentLevel = levels[currentLevelIndex];
+  createLetterCircle(currentLevel.words[currentWordIndex]);
+});
+
+hintBtn.addEventListener("click", () => {
+  const currentLevel = levels[currentLevelIndex];
+  const hint = currentLevel.words[currentWordIndex].slice(0, 1);
+  alert(`İpucu: İlk harf "${hint}"`);
+});
+
+restartBtn.addEventListener("click", () => {
+  endModal.classList.remove("active");
+  currentLevelIndex = 0;
+  initGame();  // Oyunu sıfırla ve başlat
+});
+
+// Oyunu başlat
+function initGame() {
+  loadLevel(currentLevelIndex);  // İlk seviyeyi yükle
+}
+
+initGame();  // Oyunu başlat
+   </script>
+</body>
+</html>
